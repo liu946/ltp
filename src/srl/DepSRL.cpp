@@ -20,7 +20,7 @@ int DepSRL::LoadResource(const string &ConfigDir)
 {
     m_configXml = ConfigDir + "/Chinese.xml";
     m_selectFeats = ConfigDir + "/srl.cfg";
-    // load srl and prg model
+    // load srl and prg model 最大熵模型
     m_srlModel = new maxent::ME_Model;
     bool tag = m_srlModel->load(ConfigDir + "/srl.model");
     if(!tag) {
@@ -56,6 +56,12 @@ string DepSRL::GetSelectFeats()
 {
     return m_selectFeats;
 }
+
+/**
+ * 预测方法入口
+ *
+ *
+ */
 int DepSRL::GetSRLResult(
         const vector<string> &words,
         const vector<string> &POSs,
@@ -69,20 +75,78 @@ int DepSRL::GetSRLResult(
     ltpData.vecPos  = POSs;
     ltpData.vecNe   = NEs;
 
+    // 通过句法依存树提取 树父节点int向量 和 弧关系名称字符串向量'SBV'...
     GetParAndRel(parse, ltpData.vecParent, ltpData.vecRelation);
 
     // construct a DataPreProcess instance
+    // dataPreProc 结构是
+    /**
+     * [
+     *  {
+     *    m_ltpData:[
+     *      ltpData,
+     *    ],
+     *    m_vecNE: ['NNE' * wordSize],
+     *    m_myTree: [
+     *      {
+     *        m_depTree:{
+     *          nodeNum: wordSize,
+     *          vecDepNode: 用vector表示的一个树
+     *        },
+     *      },
+     *    ],
+     *  },
+     * ]
+     */
     DataPreProcess* dataPreProc = new DataPreProcess(&ltpData);
-
+    /**
+     * m_srlBaseline = [
+     *  { // SRLBaselineExt
+     *    SRLBaseline: {
+     *      m_dataPreProc: nil,
+     *      m_featureCollection: [
+     *        {
+     *          m_feature_infos: [{name, prefix, type, getter} x 61],
+     *          m_predicate_features: [enum x 22], // enum(FEAT_NUM)
+     *          m_node_vs_predicate_features: [enum x 10], // enum(FEAT_NUM)
+     *        }
+     *      ],
+     *      m_prgFeatureNumbers: [number x 22],
+     *      m_srlFeatureNumbers: [number x 44], // indexing
+     *      m_prgFeaturePrefixes: [string x 22], // feature名称
+     *      m_srlFeaturePrefixes: [string x 44], // feature名称
+     *      m_srlSelectFeatures: [
+     *        ['HeadwordLemma', 'RelationPath'], ['...'],... x 18 //一共 22 字符串
+     *      ],
+     *    },
+     *  }
+     * ]
+     */
     SRLBaselineExt * m_srlBaseline=new SRLBaselineExt(GetConfigXml(),GetSelectFeats());
     // extract features !
+    /** m_srlBaseline[0]->SRLBaseline->m_dataPreProc =
+     * [
+     *  {
+     *    m_ltpData: dataPreProc,
+     *  }
+     * ]
+     */
+
     m_srlBaseline->setDataPreProc(dataPreProc);
 
     // GetPredicateFromSentence(POSs,predicates);
     vector<int> predicates;
+    /**
+     * 使用this->m_prgModel构造的最大熵模型+22个特征,预测哪个词是谓词
+     */
     GetPredicateFromSentence(predicates,m_srlBaseline);
-
+    /**
+     * predicates: [1, 3] 谓语位置
+     */
     // return GetSRLResult(words, POSs, NEs, parse, predicates, vecSRLResult);
+    /**
+     * 通过不同的谓词位置预测论元种类
+     */
     return GetSRLResult(ltpData, predicates, vecSRLResult,m_srlBaseline);
 }
 
@@ -110,10 +174,18 @@ int DepSRL::GetSRLResult(
 */
 
 // produce DepSRL result for a sentence
+/**
+ * 预测论元
+ * 入参:
+ * ltpData
+ * predicates
+ * 出参:
+ * vecSRLResult
+ */
 int DepSRL::GetSRLResult(
         const LTPData     &ltpData,
         const vector<int> &predicates,
-        vector< pair< int, vector< pair< string, pair< int, int > > > > > &vecSRLResult,
+        vector< pair< int, vector< pair< string, pair< int, int > > > > > &vecSRLResult, // 出参
         SRLBaselineExt * m_srlBaseline) {
     vecSRLResult.clear();
 
@@ -133,10 +205,34 @@ int DepSRL::GetSRLResult(
     vector< vector< pair<string, double> > > vecAllPairNextArgs;
 
     // extract features
+    /**
+     * 函数返回参数
+     * vecAllFeatures =
+     * [
+     *  [
+     *    features<string> x n
+     *  ], x 预测的谓词数量
+     * ]
+     */
     if (!ExtractSrlFeatures(ltpData, predicates,vecAllFeatures,vecAllPos,m_srlBaseline))
         return 0;
 
     // predict
+    /**
+     * 函数返回参数
+     * vecAllPairMaxArgs = // 最可能结果
+     * [
+     *  [
+     *    features<string> x n
+     *  ], x 预测的谓词数量
+     * ]
+     * vecAllPairNextArgs = // 第二可能结果
+     * [
+     *  [
+     *    features<string> x n
+     *  ], x 预测的谓词数量
+     * ]
+     */
     if (!Predict(vecAllFeatures,vecAllPairMaxArgs,vecAllPairNextArgs))
         return 0;
 
@@ -188,11 +284,23 @@ int DepSRL::Predict(
 {
     vector< pair<string, double> > vecPredPairMaxArgs;
     vector< pair<string, double> > vecPredPairNextArgs;
-
+    /**
+     * vecAllFeatures:
+     * [
+     *  [ // predicate_iter
+     *    [// position_iter
+     *      feature1,  // 'PATH@r>L#v'
+     *      feature2,
+     *      ...
+     *    ] x 预测句中词数量
+     *  ], 多个谓词预测
+     * ]
+     */
     for(VecFeatForSent::iterator predicate_iter = vecAllFeatures.begin();
             predicate_iter != vecAllFeatures.end();
             ++predicate_iter
        ){// for each predicate
+        // predicate_iter
         vecPredPairMaxArgs.clear();
         vecPredPairNextArgs.clear();
 
@@ -203,9 +311,19 @@ int DepSRL::Predict(
             vector<pair<string,double> > outcome;
 
             maxent::ME_Sample sample(*position_iter);
+            /**
+             * outcome =
+             * [
+             *  {
+             *    first = '类别名称', // null, A0, A1, AVD ... 35个分类
+             *    second = 概率值
+             *  }, x 分类数 36
+             * ]
+             */
+            //std::cout<<((*predicate_iter)[10]).<<endl;
             m_srlModel->predict(sample, outcome);
             // m_srlModel->eval_all((*position_iter),outcome);
-
+            // 取预测分类前2个
             vecPredPairMaxArgs.push_back(outcome[0]);
             vecPredPairNextArgs.push_back(outcome[1]);
         }
@@ -217,6 +335,26 @@ int DepSRL::Predict(
     return 1;
 }
 
+/**
+ * words = 输入分词列表
+ * POSs = 输入词性列表
+ * VecAllPredicate = [1, 2, 5] 预测的谓词列表
+ * vecAllPos = [ //谓词列表下每个其他词(排除谓词和其祖先)开始结束位置
+ *  [ // 对应第一个位置的谓词
+ *    (0,0) // 一个词
+ *    (2,2) // 第二个词跳过谓词
+ *    (3,5) //
+ *  ]
+ * ]
+ * vecAllPairMaxArgs = [
+ *  [ // 第一个谓词的预测, 最可能结果
+ *    ('A0', 0.999) // 第一个词是A0的概率是0.999
+ *  ],
+ * ]
+ * vecAllPairNextArgs
+ * 出参
+ * vecSRLResult
+ */
 int DepSRL::FormResult(
         const vector<string> &words,
         const vector<string> &POSs,
@@ -236,12 +374,22 @@ int DepSRL::FormResult(
 
         vecResultForOnePredicate.clear();
 
+        /**
+         * vecResultForOnePredicate = 预测出的可能论元和rel(谓词)
+         * [
+         *  ('A0', (0, 0)), // (论元,位置pair)
+         *  ('rel', (3, 3)), // (论元,位置pair)
+         * ]
+         */
         ProcessOnePredicate(
                 words, POSs, predicate_position, vecAllPos[idx], 
                 vecAllPairMaxArgs[idx], vecAllPairNextArgs[idx], 
                 vecResultForOnePredicate
                 );
-
+        /**
+         * 在大于1的时候(为1时只有rel)
+         * 认为这个预测有效
+         */
         if ( vecResultForOnePredicate.size() > 1 ) {
             vecResultForOnePredicate.pop_back(); // pop the "V" arg
             vecSRLResult.push_back(make_pair(predicate_position,vecResultForOnePredicate));
@@ -275,13 +423,23 @@ void DepSRL::ProcessOnePredicate(
     RemoveNullLabel(vecPairMaxArgs, vecPairNextArgs, vecPairPS, vecPairNNLMax, vecPairNNLNext, vecPairNNLPS);
 
     // step 2. insert the args
-    vector<int> vecItem;
+    vector<int> vecItem; // @remove 无用的变量
     for (int index = 0; index < vecPairNNLPS.size(); index++)
     {
         InsertOneArg( vecPairNNLPS.at(index), vecPairNNLMax.at(index), vecPairNNLNext.at(index), vecPairPSBuf, vecPairMaxArgBuf, vecPairNextArgBuf ) ;
     }
+    /**
+     * 此步骤结束之后, 更新了如下内容
+     * vecPairPSBuf
+     * vecPairMaxArgBuf
+     * vecPairNextArgBuf
+     *
+     */
 
     // step 3. insert predicate node
+    /**
+     * 这步的目的是将rel这个谓词当论元压入各种数组之中
+     */
     if ( IsInsertPredicate(intPredicates, vecPairMaxArgBuf, vecPairPSBuf) )
     {
         pair<int, int> prPdPS;
@@ -297,6 +455,11 @@ void DepSRL::ProcessOnePredicate(
     }
 
     // step 4. post process
+    /**
+     * 后处理
+     * @important
+     *
+     */
     PostProcess(vecPos, vecPairPS, vecPairMaxArgs, vecPairNextArgs, vecPairPSBuf, vecPairMaxArgBuf, vecPairNextArgBuf);
 
     // put into output vector
@@ -305,7 +468,11 @@ void DepSRL::ProcessOnePredicate(
         vecResultForOnePredicate.push_back(make_pair(vecPairMaxArgBuf[index].first, vecPairPSBuf[index]));
     }
 }
-
+/**
+ * 去掉NULL标签
+ *
+ * 此函数实际实现的是 按照MAX的向量的NULL?来去掉 Max Next和 vecPair(位置信息pair)
+ */
 void DepSRL::RemoveNullLabel(const vector< pair<string, double> >& vecPairMaxArgs, 
         const vector< pair<string, double> >& vecPairNextArgs, 
         const vector< pair<int, int> >& vecPairPS, 
@@ -318,7 +485,7 @@ void DepSRL::RemoveNullLabel(const vector< pair<string, double> >& vecPairMaxArg
     vecPairNNLPS.clear();
     for (int index = 0; index < vecPairMaxArgs.size(); index++)
     {
-        if ( vecPairMaxArgs.at(index).first.compare(S_NULL_ARG) )
+        if ( vecPairMaxArgs.at(index).first.compare(S_NULL_ARG) ) // == 'NULL'
         {
             vecPairNNLMax.push_back(vecPairMaxArgs.at(index));
             vecPairNNLNext.push_back(vecPairNextArgs.at(index));
@@ -504,6 +671,15 @@ void DepSRL::GetPredicateFromSentence(vector<int>& vecPredicate,SRLBaselineExt *
     vector< vector<string> > vecFeatures;
     m_srlBaseline->ExtractPrgFeatures(vecFeatures);
 
+    /**
+     * vecFeatures =
+     * [
+     *  [
+     *    '特征名称@特征值', x 特征数量(22)
+     *  ], x 预测句中词的数量
+     * ]
+     */
+
     /* predict */
     for (size_t i = 0; i < vecFeatures.size(); ++i)
     {
@@ -514,7 +690,12 @@ void DepSRL::GetPredicateFromSentence(vector<int>& vecPredicate,SRLBaselineExt *
             vecPredicate.push_back(i);
     }
 }
-
+/**
+ * 后处理函数
+ * @important
+ * 入参
+ * 出参
+ */
 void DepSRL::PostProcess(const vector<string>& vecPos,
         const vector< pair<int, int> >& vecPairPS,
         const vector< pair<string, double> >& vecPairMaxArgs,

@@ -157,10 +157,17 @@ void SRLBaselineExt::ExtractSrlFeatures(
 
             all_feature_values.push_back(feature_values);
         }
-
+        /**
+         * 这个循环为了构造
+         * vecFeatAllCons =
+         * [
+         *  [feature *18] * 预测句子单词数(去掉谓词和其祖先节点的词)
+         * ]
+         */
         for (size_t row = 1; row <= row_count; ++row)
         {
             vecForCons.clear();
+            // 减除标点符号 谓词 和 是谓词祖先节点的词!
             if (IsFilter(row-1, predID))
                 continue;
             for (size_t i = 0; i < m_srlSelectFeatures.size(); ++i)
@@ -329,7 +336,9 @@ void SRLBaselineExt::open_select_config(string selectConfig)
     }
     conf_input.close();
 }
-
+/**
+ * 筛选出不是谓词以及谓词祖先节点的词
+ */
 bool SRLBaselineExt::IsFilter(int nodeID, int intCurPd) const
 {
     DepNode depNode;

@@ -115,7 +115,7 @@ class ME_Model {
     /* Class for Maxent model */
     public:
 
-        ME_Model() {}
+         ME_Model() {}
 
         ME_Model(ME_Parameter& param) : _param(param) {}
         ME_Model(const std::string& model_path)

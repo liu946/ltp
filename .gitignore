@@ -83,3 +83,7 @@ Temporary Items
 
 doc/_build
 !doc/Makefile
+
+# idea IDE
+.idea
+include

@@ -45,6 +45,6 @@ set_target_properties (otpos PROPERTIES
     OUTPUT_NAME otpos
     RUNTIME_OUTPUT_DIRECTORY ${TOOLS_DIR}/train/)
 
-configure_file (
-    postag_dll.h
-    ${INCLUDE_OUTPUT_PATH}/ltp/postag_dll.h)
+#configure_file (
+#    postag_dll.h
+#    ${INCLUDE_OUTPUT_PATH}/ltp/postag_dll.h)

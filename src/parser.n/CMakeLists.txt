@@ -44,6 +44,6 @@ set_target_properties (nndepparser PROPERTIES
     OUTPUT_NAME nndepparser
     RUNTIME_OUTPUT_DIRECTORY ${TOOLS_DIR}/train/)
     
-configure_file (
-    parser_dll.h
-    ${INCLUDE_OUTPUT_PATH}/ltp/parser_dll.h)
+#configure_file (
+#    parser_dll.h
+#    ${INCLUDE_OUTPUT_PATH}/ltp/parser_dll.h)

@@ -44,6 +44,6 @@ set_target_properties (otner PROPERTIES
     OUTPUT_NAME otner
     RUNTIME_OUTPUT_DIRECTORY ${TOOLS_DIR}/train/)
 
-configure_file (
-    ner_dll.h
-    ${INCLUDE_OUTPUT_PATH}/ltp/ner_dll.h)
+#configure_file (
+#    ner_dll.h
+#    ${INCLUDE_OUTPUT_PATH}/ltp/ner_dll.h)

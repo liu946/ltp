@@ -47,11 +47,15 @@ set_target_properties (srl_shared_lib   PROPERTIES
 target_link_libraries (srl_static_lib maxent_static_lib)
 target_link_libraries (srl_shared_lib maxent_shared_lib)
 
-configure_file (
-    SRL_DLL.h
-    ${INCLUDE_OUTPUT_PATH}/ltp/SRL_DLL.h)
+#configure_file (
+#    SRL_DLL.h
+#    ${INCLUDE_OUTPUT_PATH}/ltp/SRL_DLL.h)
 
 link_directories (${LIBRARY_OUTPUT_PATH})
+
+set(testsrl_SRC testMain.cpp)
+add_executable(testsrl ${testsrl_SRC})
+target_link_libraries (testsrl maxent srl_static_lib)
 
 # Training suite is not supported in windows
 if (NOT WIN32)

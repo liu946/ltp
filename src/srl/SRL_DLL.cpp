@@ -10,6 +10,14 @@ using namespace std;
 static DepSRL g_depSRL;
 
 // Load Resources
+/**
+ * int DepSRL::LoadResource(const string &ConfigDir)
+ * 从configDir(参数)目录下加载如下文件
+ * m_srlModel->load srl.model
+ * m_prgModel->load prg.model
+ * m_configXml = "/Chinese.xml"
+ * m_selectFeats = "/srl.cfg"
+ */
 int SRL_LoadResource(const string &ConfigDir)
 {
     if (0 == g_depSRL.LoadResource(ConfigDir)) return -1;
@@ -31,6 +39,7 @@ int DoSRL(
         const vector< pair<int, string> > &parse,
         vector< pair< int, vector< pair<string, pair< int, int > > > > > &tmp_vecSRLResult)
 {
+  // 参数检查
   if (words.size() != POSs.size()
       || words.size() != parse.size()
       || words.size() != NEs.size()) {
@@ -50,6 +59,7 @@ int DoSRL(
 
   tmp_vecSRLResult.clear();
 
+  // 主要方法
   if (0 == g_depSRL.GetSRLResult(words, POSs, NEs, parse, tmp_vecSRLResult)) {
     return -1;
   }

@@ -64,6 +64,6 @@ set_target_properties (otcws PROPERTIES  OUTPUT_NAME otcws
 # -----------------------------------------------
 # CONFIG header FILE
 # -----------------------------------------------
-configure_file (
-    segment_dll.h
-    ${INCLUDE_OUTPUT_PATH}/ltp/segment_dll.h)
+#configure_file (
+#    segment_dll.h
+#    ${INCLUDE_OUTPUT_PATH}/ltp/segment_dll.h)
