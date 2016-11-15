@@ -18,7 +18,7 @@
 #include <sstream>
 #include <vector>
 #include <bitset>
-#include <tree.hh>
+#include "tree.hh"
 #include <set>
 #include <map>
 #include "Sentence.h"

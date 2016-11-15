@@ -12,6 +12,7 @@
 #include "srl/SRL_DLL.h"
 #include "utils/codecs.hpp"
 #include "utils/logging.hpp"
+#include "LTPResource.h"
 
 #if _WIN32
 #pragma warning(disable: 4786 4284)

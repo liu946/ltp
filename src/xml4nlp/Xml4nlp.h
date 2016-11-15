@@ -21,7 +21,7 @@
 #include <sstream>
 using namespace std;
 
-#include "tinyxml.h"
+#include "../thirdparty/tinyxml/tinyxml.h"
 
 // note types used in note operations
 extern const char * const NOTE_SENT;

@@ -10,6 +10,7 @@
 ###############
 # build       #
 ###############
+bin
 build
 config.h
 
@@ -87,3 +88,6 @@ doc/_build
 # idea IDE
 .idea
 include
+*.dylib
+*.a
+ltp_data

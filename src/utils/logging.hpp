@@ -2,6 +2,7 @@
 #define __LTP_UTILS_LOGGING_HPP__
 
 #include "spthread.hpp"
+#include <android/log.h>
 
 #include <stdarg.h> // 
 #include <stdio.h>  // for vfprintf
@@ -210,29 +211,37 @@ private:
 }
 }
 
-#define TRACE_LOG(msg, ...) do { \
-  ltp::utility::Logger<void>::get_logger()->write_log(LTP_LOG_TRACE, msg, ##__VA_ARGS__); \
-} while (0);
+//#define TRACE_LOG(msg, ...) do { \
+//  ltp::utility::Logger<void>::get_logger()->write_log(LTP_LOG_TRACE, msg, ##__VA_ARGS__); \
+//} while (0);
+//
+//#define INFO_LOG(msg, ...) do { \
+//  ltp::utility::Logger<void>::get_logger()->write_log(LTP_LOG_INFO, msg, ##__VA_ARGS__); \
+//} while (0);
+//
+//#define DEBUG_LOG(msg, ...) do { \
+//  ltp::utility::Logger<void>::get_logger()->write_log(LTP_LOG_DEBUG, msg, ##__VA_ARGS__); \
+//} while (0);
+//
+//#define WARNING_LOG(msg, ...) do { \
+//  ltp::utility::Logger<void>::get_logger()->write_log(LTP_LOG_WARNING, msg, ##__VA_ARGS__); \
+//} while (0);
+//
+//#define ERROR_LOG(msg, ...) do { \
+//  ltp::utility::Logger<void>::get_logger()->write_log(LTP_LOG_ERROR, "%s: line %d: %s(): " msg, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); \
+//} while (0);
+//
+//#define FATAL_LOG(msg, ...) do { \
+//  ltp::utility::Logger<void>::get_logger()->write_log(LTP_LOG_FATAL, "%s: line %d: %s(): " msg, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); \
+//} while (0);
 
-#define INFO_LOG(msg, ...) do { \
-  ltp::utility::Logger<void>::get_logger()->write_log(LTP_LOG_INFO, msg, ##__VA_ARGS__); \
-} while (0);
-
-#define DEBUG_LOG(msg, ...) do { \
-  ltp::utility::Logger<void>::get_logger()->write_log(LTP_LOG_DEBUG, msg, ##__VA_ARGS__); \
-} while (0);
-
-#define WARNING_LOG(msg, ...) do { \
-  ltp::utility::Logger<void>::get_logger()->write_log(LTP_LOG_WARNING, msg, ##__VA_ARGS__); \
-} while (0);
-
-#define ERROR_LOG(msg, ...) do { \
-  ltp::utility::Logger<void>::get_logger()->write_log(LTP_LOG_ERROR, "%s: line %d: %s(): " msg, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); \
-} while (0);
-
-#define FATAL_LOG(msg, ...) do { \
-  ltp::utility::Logger<void>::get_logger()->write_log(LTP_LOG_FATAL, "%s: line %d: %s(): " msg, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__); \
-} while (0);
+// redefined to android logs
+#define LOG_TAG    "LTP-JNI-LOG" // 这个是自定义的LOG的标识
+#define DEBUG_LOG(...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG,__VA_ARGS__)
+#define INFO_LOG(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
+#define WARNING_LOG(...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
+#define ERROR_LOG(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
+#define FATAL_LOG(...)  __android_log_print(ANDROID_LOG_FATAL,LOG_TAG,__VA_ARGS__)
 
 template<typename T> ltp::utility::Logger<T>* ltp::utility::Logger<T>::_instance = NULL;
 template<typename T> spthread_mutex_t ltp::utility::Logger<T>::mutex;
