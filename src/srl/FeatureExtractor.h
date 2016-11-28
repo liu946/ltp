@@ -92,6 +92,8 @@ enum FEAT_NUM
     FEAT_UP_PATH,             // the path from node to common parent
     FEAT_REL_PATH,            // relations along the path
     FEAT_UP_REL_PATH,         // relations along the half path
+    FEAT_LEMMA_PATH,
+    FEAT_UP_LEMMA_PATH,
     FEAT_PATH_LENGTH,         // length of the feature "path"
     FEAT_UP_PATH_LEN,         //
     FEAT_DOWN_PATH_LEN,       //

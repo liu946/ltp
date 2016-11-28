@@ -94,6 +94,11 @@ class Sentence
             return get_field(row, FIELD_PLEMMA);
         }
 
+        const std::string& get_LEMMA(const size_t row) const
+        {
+          return get_field(row, FIELD_LEMMA);
+        }
+
         const std::string& get_PPOS(const size_t row) const
         {
             return get_field(row, FIELD_PPOS);

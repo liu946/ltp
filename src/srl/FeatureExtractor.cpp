@@ -69,12 +69,14 @@ FeatureCollection::FeatureCollection()
     add_feature_(FEAT_PRED_SENSE,        FEAT_TYPE_PRED,              "PredicateSense",                "P_SENSE",    &FeatureExtractor::fg_predicate_basic_);
 
     // node_vs_predicate features
-
+    // 一个函数可能会extract多个feature，这就是一个原来黑龙江863的项目那个lazyload系统
     add_feature_(FEAT_PATH,              FEAT_TYPE_NODE_VS_PRED,      "Path",                          "PATH",       &FeatureExtractor::fg_path_);
     add_feature_(FEAT_UP_PATH,           FEAT_TYPE_NODE_VS_PRED,      "UpPath",                        "UP_PTH",     &FeatureExtractor::fg_path_);
     add_feature_(FEAT_REL_PATH,          FEAT_TYPE_NODE_VS_PRED,      "RelationPath",                  "REL_PATH",   &FeatureExtractor::fg_path_);
     add_feature_(FEAT_UP_REL_PATH,       FEAT_TYPE_NODE_VS_PRED,      "UpRelationPath",                "UP_REL_PT",  &FeatureExtractor::fg_path_);
-    
+    add_feature_(FEAT_LEMMA_PATH,        FEAT_TYPE_NODE_VS_PRED,      "LemmaPath",                     "LEMMA_PATH", &FeatureExtractor::fg_path_);
+    add_feature_(FEAT_UP_LEMMA_PATH,     FEAT_TYPE_NODE_VS_PRED,      "UpLemmaPath",                   "UP_LEMMA_PT",&FeatureExtractor::fg_path_);
+
     add_feature_(FEAT_PATH_LENGTH,       FEAT_TYPE_NODE_VS_PRED,      "PathLength",                    "PATH_LEN",   &FeatureExtractor::fg_path_length_);
     add_feature_(FEAT_UP_PATH_LEN,       FEAT_TYPE_NODE_VS_PRED,      "UpPathLength",                  "UP_PT_LEN",  &FeatureExtractor::fg_path_length_);
     add_feature_(FEAT_DOWN_PATH_LEN,     FEAT_TYPE_NODE_VS_PRED,      "DownPathLength",                "DN_PT_LEN",  &FeatureExtractor::fg_path_length_);
@@ -438,6 +440,10 @@ void FeatureExtractor::calc_node_vs_predicate_features_(const vector<int>& node_
     get_feature_storage_(FEAT_REL_PATH,    m_predicate_row)
         = string();
     get_feature_storage_(FEAT_UP_REL_PATH, m_predicate_row)
+        = string();
+    get_feature_storage_(FEAT_LEMMA_PATH,  m_predicate_row)
+        = mp_sentence->get_LEMMA(m_predicate_row);
+    get_feature_storage_(FEAT_UP_LEMMA_PATH,m_predicate_row)
         = string();
 
     vector<bool> node_visited_flags(row_count+1);
@@ -924,6 +930,11 @@ void FeatureExtractor::fg_path_(const size_t row)
                     = "<L#"
                     + mp_sentence->get_PDEPREL(row)
                     + get_feature_storage_(FEAT_REL_PATH, row);
+
+                 get_feature_storage_(FEAT_LEMMA_PATH, *parent)
+                    = mp_sentence->get_LEMMA(*parent)
+                    + "<L#"
+                    + get_feature_storage_(FEAT_LEMMA_PATH, row);
 			}
 			else//Right
 			{
@@ -936,12 +947,20 @@ void FeatureExtractor::fg_path_(const size_t row)
                     = "<R#"
                     + mp_sentence->get_PDEPREL(row)
                     + get_feature_storage_(FEAT_REL_PATH, row);
+
+                get_feature_storage_(FEAT_LEMMA_PATH, *parent)
+                    = mp_sentence->get_LEMMA(*parent)
+                    + "<R#"
+                    + get_feature_storage_(FEAT_LEMMA_PATH, row);
 			}
             get_feature_storage_(FEAT_UP_PATH, *parent) 
                 = get_feature_storage_(FEAT_UP_PATH, row);
 
             get_feature_storage_(FEAT_UP_REL_PATH, *parent) 
                 = get_feature_storage_(FEAT_UP_REL_PATH, row);
+
+            get_feature_storage_(FEAT_UP_LEMMA_PATH, *parent)
+                = get_feature_storage_(FEAT_UP_LEMMA_PATH, row);
         }
         else
         { // parent path already got (parent knows the path to the predicate)
@@ -966,6 +985,16 @@ void FeatureExtractor::fg_path_(const size_t row)
                     = mp_sentence->get_PDEPREL(row)
 				    + ">L#"
                     + get_feature_storage_(FEAT_UP_REL_PATH, *parent);
+
+                get_feature_storage_(FEAT_LEMMA_PATH, row)
+                    = mp_sentence->get_LEMMA(row)
+                    + ">L#"
+                    + get_feature_storage_(FEAT_LEMMA_PATH, *parent);
+
+                get_feature_storage_(FEAT_UP_LEMMA_PATH, row)
+                    = mp_sentence->get_LEMMA(row)
+                    + ">L#"
+                    + get_feature_storage_(FEAT_UP_LEMMA_PATH, *parent);
 			}
 			else//Right
 			{
@@ -988,6 +1017,16 @@ void FeatureExtractor::fg_path_(const size_t row)
                     = mp_sentence->get_PDEPREL(row)
 				    + ">R#"
                     + get_feature_storage_(FEAT_UP_REL_PATH, *parent);
+
+                get_feature_storage_(FEAT_LEMMA_PATH, row)
+                    = mp_sentence->get_LEMMA(row)
+                    + ">R#"
+                    + get_feature_storage_(FEAT_LEMMA_PATH, *parent);
+
+                get_feature_storage_(FEAT_UP_LEMMA_PATH, row)
+                    = mp_sentence->get_LEMMA(row)
+                    + ">R#"
+                    + get_feature_storage_(FEAT_UP_LEMMA_PATH, *parent);
 			}
 
         }
@@ -997,6 +1036,8 @@ void FeatureExtractor::fg_path_(const size_t row)
     set_feature_empty_(FEAT_UP_PATH,       row, false);
     set_feature_empty_(FEAT_REL_PATH,      row, false);
     set_feature_empty_(FEAT_UP_REL_PATH,   row, false);
+    set_feature_empty_(FEAT_LEMMA_PATH,    row, false);
+    set_feature_empty_(FEAT_UP_LEMMA_PATH, row, false);
 }
 
 void FeatureExtractor::fg_path_length_(const size_t row)

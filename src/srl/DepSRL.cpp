@@ -146,6 +146,7 @@ int DepSRL::GetSRLResult(
     // return GetSRLResult(words, POSs, NEs, parse, predicates, vecSRLResult);
     /**
      * 通过不同的谓词位置预测论元种类
+     * 目标的替换函数
      */
     return GetSRLResult(ltpData, predicates, vecSRLResult,m_srlBaseline);
 }
@@ -206,6 +207,7 @@ int DepSRL::GetSRLResult(
 
     // extract features
     /**
+     * 构造SRL使用的feature
      * 函数返回参数
      * vecAllFeatures =
      * [
@@ -213,6 +215,15 @@ int DepSRL::GetSRLResult(
      *    features<string> x n
      *  ], x 预测的谓词数量
      * ]
+     *
+     */
+    /*
+     * todo
+     * 这里的抽取的特征之中，有可以使用的特征
+     * REL_PATH 句法关系的句法路径，可以直接算出 两个方向的
+     * PATH 这是pos的句法路径，两个方向
+     * ！缺少：词的路径
+     * ！改造：两个方向单独的路径，直接做成适合bi-LSTM使用的
      */
     if (!ExtractSrlFeatures(ltpData, predicates,vecAllFeatures,vecAllPos,m_srlBaseline))
         return 0;
