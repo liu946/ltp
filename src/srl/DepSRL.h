@@ -17,6 +17,7 @@
 #include <utility>
 #include <string>
 #include <maxent.h>
+#include "SRLSyntacticFeature.h"
 
 class DepSRL {
 
@@ -85,7 +86,14 @@ class DepSRL {
                 VecPosForSent     &vecAllPos,
                 SRLBaselineExt* m_srlBaseline
                 );
-
+        /*
+         * 这是1的新函数，很多特征被省略，只剩这些句法特征需要处理
+         */
+        int ExtractSrlSyntacticPathFeatures(
+                const LTPData     &ltpData,
+                const vector<int> &VecAllPredicates,
+                vector<vector<SRLSyntacticFeature>> &
+        );
         /* 2.Predict with the maxent library
          */
         int Predict(

@@ -14,6 +14,7 @@
 #include "Configuration.h"
 #include "boost/bind.hpp"
 #include "boost/algorithm/string.hpp"
+#include "SRLSyntacticFeature.h"
 
 // Load necessary resources into memory
 int DepSRL::LoadResource(const string &ConfigDir)
@@ -189,7 +190,16 @@ int DepSRL::GetSRLResult(
         vector< pair< int, vector< pair< string, pair< int, int > > > > > &vecSRLResult, // 出参
         SRLBaselineExt * m_srlBaseline) {
     vecSRLResult.clear();
-
+    /*
+     * 这里开始处理
+     * 已经有：
+     * 1. 谓词位置
+     *  2.1 句法树 ltpData
+     * 需要构造：
+     * 1. 谓词和描述词的公共父节点两侧句法路径
+     * 2. 以上路径的句法关系表示
+     * 3. 以上路径的词表示
+     */
     if ( !m_resourceLoaded ) {
         cerr<<"Resources not loaded."<<endl;
         return 0;
@@ -227,6 +237,13 @@ int DepSRL::GetSRLResult(
      */
     if (!ExtractSrlFeatures(ltpData, predicates,vecAllFeatures,vecAllPos,m_srlBaseline))
         return 0;
+
+    /*
+     * 这里更新了句法路径feature，更新完毕之后上面的Extract可以去掉
+     */
+    vector<vector<SRLSyntacticFeature>> vecAllSyntacticPathFeature;
+    if (!ExtractSrlSyntacticPathFeatures(ltpData, predicates, vecAllSyntacticPathFeature))
+      return 0;
 
     // predict
     /**
@@ -1088,4 +1105,28 @@ int DepSRL::RenameArguments(
     }
 
     return 1;
+}
+
+int DepSRL::ExtractSrlSyntacticPathFeatures(const LTPData &ltpData, const vector<int> &VecAllPredicates,
+                                            vector<vector<SRLSyntacticFeature>> & outSyntacticFeatures) {
+  unsigned long sentenceLength = ltpData.vecParent.size();
+  outSyntacticFeatures.resize(0);
+  for (vector<int>::const_iterator predicate_iter = VecAllPredicates.begin();
+       predicate_iter != VecAllPredicates.end();
+       ++predicate_iter) {
+    vector<SRLSyntacticFeature> srlSyntacticFeatureList;
+    for (int word = 0; word < sentenceLength; word++) {
+      SRLSyntacticFeature syntacticFeature(ltpData, *predicate_iter, word);
+      srlSyntacticFeatureList.push_back(syntacticFeature);
+    }
+    vector<int> predicateToRootPath;
+    vector<int> isOnPredicateToRootPath;
+    srlSyntacticFeatureList[*predicate_iter].getPathToRoot(predicateToRootPath, isOnPredicateToRootPath);
+    // init syntactic path
+    for (int word = 0; word < sentenceLength; word++) {
+      srlSyntacticFeatureList[word].initSyntacticFeature(predicateToRootPath, isOnPredicateToRootPath);
+    }
+    outSyntacticFeatures.push_back(srlSyntacticFeatureList);
+  }
+  return 1;
 }

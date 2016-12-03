@@ -28,6 +28,8 @@ set (srl_SRC
     SRLBaselineExt.cpp
     SRLBaselineExt.h
     SRLBaseline.h
+    SRLSyntacticFeature.cpp
+    SRLSyntacticFeature.h
     SRL_DLL.cpp
     SRL_DLL.h
     SRL_DLL_x.cpp
