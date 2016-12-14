@@ -4,11 +4,12 @@
 
 #include <iostream>
 #include <vector>
+#include <dynet/init.h>
 
 #include "SRL_DLL.h"
 
 int main(int argc, char * argv[]) {
-
+    dynet::initialize(argc, argv);
     SRL_LoadResource("./ltp_data/srl");
 
     std::vector<std::string> words;

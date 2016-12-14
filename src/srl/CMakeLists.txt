@@ -2,7 +2,8 @@ include_directories (
     .
     ${util_DIR} 
     ${SOURCE_DIR}/utils
-    ${THIRDPARTY_DIR}/boost/include
+    ${SOURCE_DIR}/
+    ${THIRDPARTY_DIR}/dynet/
     ${THIRDPARTY_DIR}/maxent)
 
 set (srl_VERSION "0.0.1")
@@ -30,6 +31,8 @@ set (srl_SRC
     SRLBaseline.h
     SRLSyntacticFeature.cpp
     SRLSyntacticFeature.h
+        SRLBiLSTMModel.cpp
+        SRLBiLSTMModel.h
     SRL_DLL.cpp
     SRL_DLL.h
     SRL_DLL_x.cpp
@@ -55,9 +58,29 @@ target_link_libraries (srl_shared_lib maxent_shared_lib)
 
 link_directories (${LIBRARY_OUTPUT_PATH})
 
+# look for Boost
+if(DEFINED ENV{BOOST_ROOT})
+    set(Boost_NO_SYSTEM_PATHS ON)
+endif()
+set(Boost_REALPATH ON)
+find_package(Boost COMPONENTS program_options serialization REQUIRED)
+include_directories(${Boost_INCLUDE_DIR})
+set(LIBS ${LIBS} ${Boost_LIBRARIES})
+
+
+include_directories(~/soft/dynet) # -I
+link_directories(~/soft/dynet/build/dynet) # -L
+INCLUDE_DIRECTORIES(~/soft/eigen) # ???
 set(testsrl_SRC testMain.cpp)
 add_executable(testsrl ${testsrl_SRC})
-target_link_libraries (testsrl maxent srl_static_lib)
+target_link_libraries (testsrl dynet ${Boost_LIBRARIES} maxent srl_static_lib)
+
+include_directories(~/soft/dynet) # -I
+link_directories(~/soft/dynet/build/dynet) # -L
+INCLUDE_DIRECTORIES(~/soft/eigen) # ???
+set(trainSrlTest_SRC TrainSRLTest.cpp SRLBiLSTMModel.cpp SRLLookUpTable.cpp trainStn.cpp)
+add_executable(trainSrlTest ${trainSrlTest_SRC})
+target_link_libraries (trainSrlTest dynet ${Boost_LIBRARIES} )
 
 # Training suite is not supported in windows
 if (NOT WIN32)

@@ -15,6 +15,7 @@
 #include "boost/bind.hpp"
 #include "boost/algorithm/string.hpp"
 #include "SRLSyntacticFeature.h"
+#include "SRLBiLSTMModel.h"
 
 // Load necessary resources into memory
 int DepSRL::LoadResource(const string &ConfigDir)
@@ -238,13 +239,28 @@ int DepSRL::GetSRLResult(
     if (!ExtractSrlFeatures(ltpData, predicates,vecAllFeatures,vecAllPos,m_srlBaseline))
         return 0;
 
-    /*
+    /**
      * 这里更新了句法路径feature，更新完毕之后上面的Extract可以去掉
+     * [
+     *  [
+     *    {
+     *      argument_path: [位置数字表示的路径],
+     *      predicate_path: [位置数字表示的路径],
+     *      argument_lemma_path: [字表示],
+     *      predicate_lemma_path: [字表示],
+     *      argument_syntactic_label_path: [句法关系表示],
+     *      predicate_syntactic_label_path: [句法关系表示],
+     *    }, x wordNum
+     *  ], x 预测的谓词数量
+     * ]
      */
     vector<vector<SRLSyntacticFeature>> vecAllSyntacticPathFeature;
     if (!ExtractSrlSyntacticPathFeatures(ltpData, predicates, vecAllSyntacticPathFeature))
       return 0;
 
+
+    // 测试代码
+    SRLBiLSTMModel predictor("ltp_data/srl/srl.n.model", "ltp_data/srl/w2v-d200.txt", "ltp_data/srl/index/");
     // predict
     /**
      * 函数返回参数
@@ -260,9 +276,13 @@ int DepSRL::GetSRLResult(
      *    features<string> x n
      *  ], x 预测的谓词数量
      * ]
+     * 待删除方法
      */
-    if (!Predict(vecAllFeatures,vecAllPairMaxArgs,vecAllPairNextArgs))
-        return 0;
+//    if (!Predict(vecAllFeatures,vecAllPairMaxArgs,vecAllPairNextArgs))
+//        return 0;
+    /**
+     * 替换成的bi-lstm-predict
+     */
 
     // form the result
     if (!FormResult(
