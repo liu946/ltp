@@ -9,7 +9,7 @@ int main(int argc, char * argv[]) {
   dynet::initialize(argc, argv);
 
   SRLBiLSTMModelTrainer srl("ltp_data/srl/srl.bilstm.model", "ltp_data/srl/w2v-d200.txt", "ltp_data/srl/index/");
-  srl.train("ltp_data/srl/devel.txt", "ltp_data/srl/devel.txt");
+  srl.train("ltp_data/srl/train.txt", "ltp_data/srl/devel.txt");
 
   return 0;
 }

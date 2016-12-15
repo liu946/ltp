@@ -218,20 +218,23 @@ public:
     argument_path.clear();
 
     // 沿句法树向上寻找
-    for (int thisNode = word; thisNode != -1; thisNode = parentList[thisNode]) {
+    int thisNode = word;
+    for (; thisNode != -1; thisNode = parentList[thisNode]) {
       if (isOnPredicateToRootPath[thisNode] == -1) { // 当前节点没在谓词到根的语法路径上
         argument_path.push_back(thisNode);
       } else {// 找到在谓词的句法路径上
-        int nca = thisNode;
         argument_path.push_back(thisNode);
-        unsigned i;
-        for (i = 0; predicateToRootPath[i] != nca; i++) {
-          predicate_path.push_back(predicateToRootPath[i]);
-        }
-        predicate_path.push_back(predicateToRootPath[i]);
         break;
       }
     }
+    // 找到在路径上或找到了根节点
+    int nca = thisNode;
+    unsigned i;
+    for (i = 0; predicateToRootPath[i] != nca && i < predicateToRootPath.size(); i++) {
+      predicate_path.push_back(predicateToRootPath[i]);
+    }
+    if (nca != -1) // 不以根节点作为nca
+      predicate_path.push_back(predicateToRootPath[i]);
   }
   /**
    * 此词到句法树ROOT的路径
@@ -327,17 +330,7 @@ public:
     return true;
   }
 
-  bool ExtractSrlSyntacticPathFeaturesIndexes(SRLSample& srlSample, SRLLookUpTable& tables) {
-    for (int j = 0; j < srlSample.size(); ++j) {
-      injectVectorUIntByTable(j, srlSample, tables, SRLLookUpTable::Type::word, "word", "arguementPath", "arguementPathIndex");
-      injectVectorUIntByTable(j, srlSample, tables, SRLLookUpTable::Type::word, "word", "predicatePath", "predicatePathIndex");
-      injectVectorUIntByTable(j, srlSample, tables, SRLLookUpTable::Type::pos, "pos", "arguementPath", "arguementGenPathIndex");
-      injectVectorUIntByTable(j, srlSample, tables, SRLLookUpTable::Type::pos, "pos", "predicatePath", "predicateGenPathIndex");
-      injectVectorUIntByTable(j, srlSample, tables, SRLLookUpTable::Type::semtag, "semtag", "arguementPath", "arguementSemtagPathIndex");
-      injectVectorUIntByTable(j, srlSample, tables, SRLLookUpTable::Type::semtag, "semtag", "predicatePath", "predicateSemtagPathIndex");
-    }
-    return true;
-  }
+  bool ExtractSrlSyntacticPathFeaturesIndexes(SRLSample& srlSample, SRLLookUpTable& tables);
 
   bool ExtractSrlSyntacticPathFeatures(int predicate, SRLSample &sample);
 

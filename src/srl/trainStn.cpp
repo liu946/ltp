@@ -3,6 +3,7 @@
 //
 
 #include "trainStn.h"
+#include <vector>
 #include "iostream"
 using namespace std;
 
@@ -22,7 +23,7 @@ bool TrainStn::read(ifstream& in) {
     split(lineFeatures, line, is_any_of("\t\n"));
     input.push_back(lineFeatures);
   }
-  return false;
+  return true;
 }
 
 bool Stn::extractSample(vector<SRLSample>& SampleList, SRLLookUpTable& tables) {
@@ -32,14 +33,27 @@ bool Stn::extractSample(vector<SRLSample>& SampleList, SRLLookUpTable& tables) {
     for (int j = 0; j < word_num; ++j) {
       Word * word = getInstance(j);
       Sample * wordSample = new Sample();
-      initSampleByWord(*wordSample, *word, tables, k);
+      initSampleByWord(*wordSample, *word, tables, (unsigned int) k);
       baseSample.insertInstance(wordSample);
     }
     SRLSample sample = baseSample;
-    sample.setFeature<unsigned>("predicate", predicateList[k]);
+    sample.setFeature<unsigned>("predicate", (const unsigned int &) predicateList[k]);
     ExtractSrlSyntacticPathFeatures(predicateList[k], sample);
     ExtractSrlSyntacticPathFeaturesIndexes(sample, tables);
     SampleList.push_back(sample);
+  }
+  return true;
+}
+
+bool Stn::ExtractSrlSyntacticPathFeaturesIndexes(SRLSample& srlSample, SRLLookUpTable& tables) {
+
+  for (int j = 0; j < srlSample.size(); ++j) {
+    injectVectorUIntByTable(j, srlSample, tables, SRLLookUpTable::Type::word, "word", "arguementPath", "arguementPathIndex");
+    injectVectorUIntByTable(j, srlSample, tables, SRLLookUpTable::Type::word, "word", "predicatePath", "predicatePathIndex");
+    injectVectorUIntByTable(j, srlSample, tables, SRLLookUpTable::Type::pos, "pos", "arguementPath", "arguementGenPathIndex");
+    injectVectorUIntByTable(j, srlSample, tables, SRLLookUpTable::Type::pos, "pos", "predicatePath", "predicateGenPathIndex");
+    injectVectorUIntByTable(j, srlSample, tables, SRLLookUpTable::Type::semtag, "semtag", "arguementPath", "arguementSemtagPathIndex");
+    injectVectorUIntByTable(j, srlSample, tables, SRLLookUpTable::Type::semtag, "semtag", "predicatePath", "predicateSemtagPathIndex");
   }
   return true;
 }

@@ -88,3 +88,5 @@ doc/_build
 # idea IDE
 .idea
 include
+
+thirdparty/dynet/
