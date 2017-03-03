@@ -6,6 +6,10 @@ include_directories (./
 
 set (ltp_server_SRC ltp_server.cpp mongoose.c mongoose.h)
 link_directories ( ${LIBRARY_OUTPUT_PATH} )
+
+INCLUDE_DIRECTORIES(~/soft/eigen) # -I
+include_directories(~/soft/dynet) # -I
+link_directories(~/soft/dynet/build/dynet) # -L
 add_executable (ltp_server ${ltp_server_SRC})
 target_link_libraries (ltp_server
     maxent_static_lib
@@ -15,7 +19,8 @@ target_link_libraries (ltp_server
     postagger_static_lib
     parser_static_lib
     ner_static_lib
-    srl_static_lib
+    ppsrl_static_lib
+    dynet
     xml4nlp
     pthread
     boost_program_options_static_lib

@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
 
   // getchar();
   while (exit_flag == 0) {
-    sleep(100000);
+    sleep(1);
   }
   mg_stop(ctx);
 

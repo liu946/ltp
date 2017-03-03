@@ -16,7 +16,13 @@
 #include <vector>
 #include <utility>
 #include <string>
-#include <maxent.h>
+#include <common/structure/SRLLookUpTable.h>
+
+#include "pp/config/PPConfig.h"
+#include "srl/config/SRLConfig.h"
+#include "pp/model/PPBiLSTMModel.h"
+#include "srl/model/SRLBiLSTMModel.h"
+#include "structure/SRLLookUpTable.h"
 
 class DepSRL {
 
@@ -71,9 +77,6 @@ class DepSRL {
                 vector< pair< int, vector< pair< string, pair< int, int > > > > > &vecSRLResult,
                 SRLBaselineExt * m_srlBaseline
                 );
-
-        string GetConfigXml();
-        string GetSelectFeats();
 
     private:
         /* 1.Extract SRL Features from input
@@ -244,11 +247,21 @@ class DepSRL {
 
     private:
         bool                m_resourceLoaded;
-
-        string m_configXml;
-        string m_selectFeats;
-        maxent::ME_Model    *m_srlModel; // for role labeling
-        maxent::ME_Model    *m_prgModel; // for predicate recognition
+        PPBaseConf ppConfig;
+        SRLBaseConf srlConfig;
+        SRLBiLSTMModel * srl_model;
+        PPBiLSTMModel * pp_model;
+        SRLLookUpTable table;
+    private:
+        void manageConfigPath(ModelConf &config, const string &dirPath);
+        void generateOldPosStructure(const vector< pair<int, string> > &parse,
+                                     const vector<int> & predicate,
+                                     VecPosForSent & vecAllPos,
+                                     vector< vector< pair<string, double> > > & vecAllPairMaxArgs,
+                                     vector< vector< pair<string, double> > > & vecAllPairNextArgs);
+        inline int subTreeBegin(int index, const vector< pair<int, string> > &parse);
+        inline int subTreeEnd(int index, const vector< pair<int, string> > &parse);
+        inline bool isOnTree(int index, int root, const vector<pair<int, string> > &parse);
 };
 
 #endif

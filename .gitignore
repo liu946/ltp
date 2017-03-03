@@ -91,3 +91,7 @@ doc/_build
 *.iml
 out
 gen
+ltp-data
+cmake
+cmake-build-debug
+include/ltp
