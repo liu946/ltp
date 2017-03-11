@@ -251,7 +251,7 @@ class DepSRL {
         SRLBaseConf srlConfig;
         SRLBiLSTMModel * srl_model;
         PPBiLSTMModel * pp_model;
-        SRLLookUpTable table;
+        SRLLookUpTable table1, table2;
     private:
         void manageConfigPath(ModelConf &config, const string &dirPath);
         void generateOldPosStructure(const vector< pair<int, string> > &parse,

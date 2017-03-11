@@ -31,20 +31,22 @@ using namespace std;
 int DepSRL::LoadResource(const string &ConfigDir)
 {
     dynet::DynetParams params;
-    params.mem_descriptor = "1000";
+    params.mem_descriptor = "2000";
     dynet::initialize(params);
 
     ppConfig.init(ConfigDir + "/pp.config"); manageConfigPath(ppConfig, ConfigDir);
     srlConfig.init(ConfigDir + "/srl.config"); manageConfigPath(srlConfig, ConfigDir);
     cout << ppConfig.toString("\n", "->") << endl;
     cout << srlConfig.toString("\n", "->") << endl;
-    // load index
-    table.loadIndex(ppConfig.indexPath);
-    table.freeze();
 
-    pp_model = new PPBiLSTMModel(ppConfig, table);
+    pp_model = new PPBiLSTMModel(ppConfig, table1);
+    pp_model->loadLookUpTable();
+    table1.freeze();
     pp_model->init();
-    srl_model = new SRLBiLSTMModel(srlConfig, table);
+
+    srl_model = new SRLBiLSTMModel(srlConfig, table2);
+    srl_model->loadLookUpTable();
+    table2.freeze();
     srl_model->init();
 
     // load model
@@ -93,7 +95,7 @@ int DepSRL::GetSRLResult(
     // pp
     {
         // todo construct pp sample
-        ConverterSentenceToPPSampleGroup conv_stnToPPSamp(table);
+        ConverterSentenceToPPSampleGroup conv_stnToPPSamp(table1);
         conv_stnToPPSamp.convert(sentence);
         PPBiLSTMSampleGroup& smp = conv_stnToPPSamp.getResult()[0];
         // todo pp prediction
@@ -103,7 +105,7 @@ int DepSRL::GetSRLResult(
         // todo pp writeback
         assert(smp.samples.size() == results.size());
         for (int j = 0; j < smp.size(); ++j) {
-            smp.samples[j].isPredicate = results[j][0].first;
+            smp.samples[j].isPredicate = (unsigned int)(results[j][0].first || results[j][1].second > 0.1);
         }
         conv_stnToPPSamp.iconvOne(sentence, smp, 0);
     }
@@ -116,7 +118,7 @@ int DepSRL::GetSRLResult(
     vector< vector< pair<string, double> > > vecAllPairNextArgs;
     {
         // todo construct srl sample
-        ConverterSentenceToSRLBiLSTMSampleGroup conv_stnToSRLSamp(table);
+        ConverterSentenceToSRLBiLSTMSampleGroup conv_stnToSRLSamp(table2);
         conv_stnToSRLSamp.convert(sentence);
         vector<SRLBiLSTMSampleGroup>& smps = conv_stnToSRLSamp.getResult();
         // todo srl prediction
@@ -130,8 +132,8 @@ int DepSRL::GetSRLResult(
             vector< pair<string, double> > vecPairNextArgs;
             for (int j = 0; j < smps[k].samples.size(); ++j) {
                 smps[k].samples[j].label = results[j][0].first;
-                vecPairMaxArgs.push_back(make_pair(table.label.getStringByIndex(results[j][0].first), results[j][0].second));
-                vecPairNextArgs.push_back(make_pair(table.label.getStringByIndex(results[j][1].first), results[j][1].second));
+                vecPairMaxArgs.push_back(make_pair(table2.label.getStringByIndex(results[j][0].first), results[j][0].second));
+                vecPairNextArgs.push_back(make_pair(table2.label.getStringByIndex(results[j][1].first), results[j][1].second));
             }
             vecAllPairMaxArgs.push_back(vecPairMaxArgs);
             vecAllPairNextArgs.push_back(vecPairNextArgs);
