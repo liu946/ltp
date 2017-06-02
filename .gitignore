@@ -31,8 +31,10 @@ tools/train/otpos
 tools/train/otner
 tools/train/maxent
 tools/train/nndepparser
+tools/train/srl*
 tools/train/Release/
 tools/train/Debug/
+include/ltp
 
 ###############
 # data file   #

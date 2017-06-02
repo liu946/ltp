@@ -2,6 +2,7 @@
 #define __LTP_H__
 
 #include "LTPResource.h"
+#include "config.h"
 #include "xml4nlp/Xml4nlp.h"
 #include <iostream>
 #include <string>
@@ -19,6 +20,7 @@
 #define LTP_SERVICE_NAME_NER      "ner"
 #define LTP_SERVICE_NAME_DEPPARSE "dp"
 #define LTP_SERVICE_NAME_SRL      "srl"
+#define LTP_SERVICE_NAME_ALL      "all"
 
 enum ErrorCodes {
   kEmptyStringError = 1,  /*< The input sentence is empty */
@@ -27,7 +29,7 @@ enum ErrorCodes {
   kPostagError,           /*< Failed to perform postag  */
   kParserError,           /*< Failed to perform parsing */
   kNERError,              /*< Failed to perform NER     */
-  kSRLError,              /*< Failed to perform SRL     */
+  kSRLError,              /*< Failed to perform srl     */
   kEncodingError,         /*< Sentence encoding not in UTF-8 */
   kXmlParseError,         /*< Input xml is not well formatted */
   kSentenceTooLongError,  /*< More than 300 characters or 70 words */
@@ -41,17 +43,18 @@ public:
   static const int kActivePostagger = 1<<2;
   static const int kActiveNER       = 1<<3;
   static const int kActiveParser    = 1<<4;
-  static const int kActiveSRL       = 1<<5;
+  static const int kActiveSemanticParser = 1<<5;
+  static const int kActiveSRL       = 1<<6;
 
 public:
   LTP(const std::string& last_stage,
-      const std::string& segmentor_model_file,
-      const std::string& segmentor_lexicon_file,
-      const std::string& postagger_model_file,
-      const std::string& postagger_lexicon_file,
-      const std::string& ner_model_file,
-      const std::string& parser_model_file,
-      const std::string& srl_model_dir);
+  const std::string& segmentor_model_file,
+  const std::string& segmentor_lexicon_file,
+  const std::string& postagger_model_file,
+  const std::string& postagger_lexicon_file,
+  const std::string& ner_model_file,
+  const std::string& parser_model_file,
+  const std::string& srl_model_dir);
 
   ~LTP();  //! The deallocator
   bool loaded() const;  //! return true on the resource successful loaded, otherwise false
@@ -114,13 +117,13 @@ private:
    *  @return     int           0 on success, otherwise -1
    */
   bool load(const std::string& last_stage,
-      const std::string& segmentor_model_file,
-      const std::string& segmentor_lexicon_file,
-      const std::string& postagger_model_file,
-      const std::string& postagger_lexicon_file,
-      const std::string& ner_model_file,
-      const std::string& parser_model_file,
-      const std::string& srl_model_dir);
+       const std::string& segmentor_model_file,
+       const std::string& segmentor_lexicon_file,
+       const std::string& postagger_model_file,
+       const std::string& postagger_lexicon_file,
+       const std::string& ner_model_file,
+       const std::string& parser_model_file,
+       const std::string& srl_model_file);
 
 private:
   LTPResource _resource;    /*< the ltp resources */
